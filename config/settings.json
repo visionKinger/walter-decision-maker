@@ -1,10 +1,10 @@
 {
   "weights": {
-    "macro": 0.30,
+    "macro": 0.3,
     "liquidity": 0.25,
-    "trend": 0.20,
+    "trend": 0.2,
     "expectation_gap": 0.15,
-    "quality": 0.10
+    "quality": 0.1
   },
   "thresholds": {
     "risk_on": 70,
@@ -13,5 +13,8 @@
   "paths": {
     "decision_log": "data/decision_log.csv",
     "report_dir": "data/daily_report"
+  },
+  "data": {
+    "quality_symbol": "AAPL"
   }
 }
