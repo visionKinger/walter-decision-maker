@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import json
+import os
 
 from src.data.data_monitor import DataMonitor
 from src.data.indicators import expectation_gap_score, liquidity_score, macro_score, trend_score
@@ -38,8 +39,17 @@ def run_pipeline() -> dict:
     settings = load_settings()
     monitor = DataMonitor()
     snapshot = monitor.fetch_snapshot()
+    quality_symbol = settings.get("data", {}).get("quality_symbol", "AAPL")
+    quality_snapshot = monitor.fetch_quality_snapshot(
+        symbol=quality_symbol,
+        api_key=os.getenv("FMP_API_KEY"),
+    )
 
-    stage0 = stage0_quality_filter.run(roe=0.18, debt_ratio=0.35, fcf_margin=0.12)
+    stage0 = stage0_quality_filter.run(
+        roe=quality_snapshot.roe,
+        debt_ratio=quality_snapshot.debt_ratio,
+        fcf_margin=quality_snapshot.fcf_margin,
+    )
     m_score = macro_score(snapshot)
     l_score = liquidity_score(snapshot)
     e_score = expectation_gap_score(snapshot)
