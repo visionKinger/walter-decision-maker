@@ -10,11 +10,13 @@ from src.models.decision_tree import classify_environment
 from src.models.scoring import weighted_opportunity_score
 from src.reports.report_generator import (
     append_decision_log,
+    build_fallback_report,
+    build_llm_context,
     build_cycle_report,
     build_game_theory_matrix,
     build_liquidity_dashboard,
-    write_daily_report,
     generate_deepseek_report,
+    write_daily_report,
 )
 from src.stages import (
     stage0_quality_filter,
@@ -71,39 +73,33 @@ def run_pipeline() -> dict:
         f"Trend={stage4['trend_status']}, Score={overall}, Allocation={stage5['allocation']}"
     )
     stage6 = stage6_daily_review.run(summary)
-
-    markdown = "\n".join(
-        [
-            "# Walter Daily Decision Report",
-            f"- Macro Regime: {stage1['macro_regime']} ({m_score})",
-            f"- Liquidity Status: {stage2['liquidity_status']} ({l_score})",
-            f"- Trend Status: {stage4['trend_status']} ({t_score})",
-            f"- Opportunity Score: {overall}",
-            f"- Portfolio Allocation: {stage5['allocation']}",
-            f"- Risk Alert: {stage5['risk_alert']}",
-            "",
-            "## Module 1: Cycle Report",
-            str(cycle),
-            "",
-            "## Module 2: Liquidity & Sentiment Dashboard",
-            str(liquidity_dash),
-            "",
-            "## Module 3: Game Theory Matrix",
-            *[str(x) for x in game_theory],
-            "",
-            f"## Daily Review\n{stage6}",
-            f"## Expectation Signal\n{stage3}",
-        ]
+    llm_context = build_llm_context(
+        as_of=snapshot.as_of,
+        env=env,
+        macro_regime=stage1["macro_regime"],
+        macro_score=m_score,
+        liquidity_status=stage2["liquidity_status"],
+        liquidity_score=l_score,
+        trend_status=stage4["trend_status"],
+        trend_score=t_score,
+        opportunity_score=overall,
+        allocation=stage5["allocation"],
+        risk_alert=stage5["risk_alert"],
+        cycle=cycle,
+        liquidity_dash=liquidity_dash,
+        game_theory=game_theory,
+        daily_review=stage6,
+        expectation_signal=str(stage3),
     )
 
-
     try:
-        deepseek_section = generate_deepseek_report(summary)
+        markdown = generate_deepseek_report(llm_context)
     except Exception as exc:
-        deepseek_section = f"DeepSeek generation failed: {exc}"
+        markdown = build_fallback_report(llm_context)
+        markdown += f"\n\n> Note: DeepSeek generation failed: {exc}"
 
-    if deepseek_section:
-        markdown += f"\n\n## DeepSeek AI Summary\n{deepseek_section}"
+    if not markdown:
+        markdown = build_fallback_report(llm_context)
 
     out = write_daily_report({"markdown": markdown}, settings["paths"]["report_dir"])
 
