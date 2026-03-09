@@ -1,0 +1,17 @@
+{
+  "weights": {
+    "macro": 0.30,
+    "liquidity": 0.25,
+    "trend": 0.20,
+    "expectation_gap": 0.15,
+    "quality": 0.10
+  },
+  "thresholds": {
+    "risk_on": 70,
+    "risk_off": 40
+  },
+  "paths": {
+    "decision_log": "data/decision_log.csv",
+    "report_dir": "data/daily_report"
+  }
+}
