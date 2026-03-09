@@ -33,36 +33,42 @@
 ```
 walter-decision-maker/
 ├── docs/
-│   ├── system_design.md
-│   ├── decision_tree.md
-│   ├── scoring_model.md
-│   └── review_system.md
 ├── src/
-│   ├── stages/
 │   ├── data/
+│   ├── stages/
 │   ├── models/
 │   ├── reports/
 │   └── main.py
-├── data/
-│   ├── monitored_assets.json
-│   ├── decision_log.csv
-│   └── daily_report/
 ├── config/
-│   └── settings.json
 ├── tests/
+├── .github/workflows/daily-report.yml
 ├── requirements.txt
 └── README.md
 ```
 
-## 数据引擎（Dalio + Druckenmiller + Jiang）
+## 数据引擎（实时抓取）
 
-当前实现内置了可离线运行的数据快照与指标映射，便于先跑通流程：
+`src/data/data_monitor.py` 默认会从 Stooq 抓取关键指数（日内开收盘变化），包括：
 
-- **Macro Dashboard**：CPI/PCE、ISM、2s10s、Debt proxy
-- **Liquidity Dashboard**：Fed Balance Sheet trend、M2、HY Spread、政策鹰鸽评分
-- **Game Theory Matrix**：关键参与方、激励与可能动作
+- SPY（美股风险偏好）
+- 2822.HK（沪深300 ETF 代理）
+- US10Y（10 年期美债）
+- DXY（美元指数）
+- XAUUSD（黄金）
+- CL（原油）
 
-后续可把 `src/data/sources.py` 替换为 Wind / Bloomberg / Reuters / FRED 的实时拉取。
+当网络异常时，会自动回退到本地默认快照，保证流水线不中断。
+
+## DeepSeek 报告生成
+
+流水线支持使用 DeepSeek 生成 `## DeepSeek AI Summary`：
+
+```bash
+export DEEPSEEK_API_KEY="<your-key>"
+python -m src.main
+```
+
+如果没有提供 `DEEPSEEK_API_KEY`，系统会继续生成基础报告（不含 AI 段落）。
 
 ## 快速开始
 
@@ -73,41 +79,17 @@ pip install -r requirements.txt
 python -m src.main
 ```
 
-## 每日自动输出
+## GitHub Action 每日任务
 
-**Walter Daily Decision Report** 包含：
+已提供 `.github/workflows/daily-report.yml`：
 
-- Macro Regime（宏观环境）
-- Liquidity Status（流动性状态）
-- Trend Status（趋势状态）
-- Opportunity Score（机会评分）
-- Portfolio Allocation（仓位配置）
-- Risk Alert（风险预警）
-- Dalio/Druckenmiller/Jiang 三模块摘要
+- 每天 UTC `01:00` 自动运行
+- 也支持手动 `workflow_dispatch`
+- 使用 `secrets.DEEPSEEK_API_KEY` 调用 DeepSeek
+- 将生成的日报作为 Artifact 上传
 
-## 系统运行时间
+配置步骤：
 
-```
-06:00 - 数据抓取
-07:00 - 指标计算
-08:00 - 决策树运行
-09:00 - 生成报告
-```
-
-## 监控资产
-
-**中国市场：**
-- 000300 (沪深300)
-- 000905 (中证500)
-- 399006 (创业板指)
-
-**全球资产：**
-- SPY (S&P 500)
-- GLD (黄金)
-- USO (原油)
-
-**宏观指标：**
-- 美元指数
-- 美债收益率
-- 黄金
-- 原油
+1. 进入 GitHub Repo → Settings → Secrets and variables → Actions
+2. 新建 Secret：`DEEPSEEK_API_KEY`
+3. 推送代码后等待每日任务自动执行

@@ -22,3 +22,9 @@ venv.bak/
 
 # Data directory exclusions
 data/
+# Keep source data modules
+!src/data/
+!src/data/**
+
+# Python cache
+__pycache__/

@@ -1,1 +1,1 @@
-# No external dependency required for offline baseline pipeline.
+# No external dependencies required.
