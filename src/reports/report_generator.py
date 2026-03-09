@@ -33,7 +33,7 @@ def build_game_theory_matrix() -> list[dict]:
 
 
 def generate_deepseek_report(context: str) -> str | None:
-    api_key = os.getenv("DEEPSEEK_API_KEY")
+    api_key = os.getenv("DEEPSEEK_API_KEY") or os.getenv("DEEKSEEK_API_KEY")
     if not api_key:
         return None
 
