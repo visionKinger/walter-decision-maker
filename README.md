@@ -33,38 +33,44 @@
 ```
 walter-decision-maker/
 ├── docs/
-│   ├── system_design.md          # 完整系统设计
-│   ├── decision_tree.md          # 决策树规则
-│   ├── scoring_model.md          # 评分模型
-│   └── review_system.md          # 复盘系统
+│   ├── system_design.md
+│   ├── decision_tree.md
+│   ├── scoring_model.md
+│   └── review_system.md
 ├── src/
-│   ├── stages/                   # 七个决策阶段
-│   │   ├── stage0_quality_filter.py
-│   │   ├── stage1_macro_cycle.py
-│   │   ├── stage2_liquidity.py
-│   │   ├── stage3_expectation_gap.py
-│   │   ├── stage4_trend_confirm.py
-│   │   ├── stage5_position_decision.py
-│   │   └── stage6_daily_review.py
-│   ├── data/                     # 数据处理
-│   │   ├── data_monitor.py
-│   │   ├── indicators.py
-│   │   └── sources.py
-│   ├── models/                   # 核心模型
-│   │   ├── decision_tree.py
-│   │   └── scoring.py
+│   ├── stages/
+│   ├── data/
+│   ├── models/
 │   ├── reports/
-│   │   └── report_generator.py
 │   └── main.py
 ├── data/
-│   ├── monitored_assets.json     # 监控资产池
-│   ├── decision_log.csv          # 决策日志
-│   └── daily_report/             # 日报输出
+│   ├── monitored_assets.json
+│   ├── decision_log.csv
+│   └── daily_report/
 ├── config/
-│   └── settings.yaml             # 配置参数
+│   └── settings.json
 ├── tests/
 ├── requirements.txt
 └── README.md
+```
+
+## 数据引擎（Dalio + Druckenmiller + Jiang）
+
+当前实现内置了可离线运行的数据快照与指标映射，便于先跑通流程：
+
+- **Macro Dashboard**：CPI/PCE、ISM、2s10s、Debt proxy
+- **Liquidity Dashboard**：Fed Balance Sheet trend、M2、HY Spread、政策鹰鸽评分
+- **Game Theory Matrix**：关键参与方、激励与可能动作
+
+后续可把 `src/data/sources.py` 替换为 Wind / Bloomberg / Reuters / FRED 的实时拉取。
+
+## 快速开始
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m src.main
 ```
 
 ## 每日自动输出
@@ -77,6 +83,7 @@ walter-decision-maker/
 - Opportunity Score（机会评分）
 - Portfolio Allocation（仓位配置）
 - Risk Alert（风险预警）
+- Dalio/Druckenmiller/Jiang 三模块摘要
 
 ## 系统运行时间
 
