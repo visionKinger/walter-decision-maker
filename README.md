@@ -92,4 +92,5 @@ python -m src.main
 
 1. 进入 GitHub Repo → Settings → Secrets and variables → Actions
 2. 新建 Secret：`DEEPSEEK_API_KEY`
-3. 推送代码后等待每日任务自动执行
+3. 若要启用邮件发送，额外配置 Secrets：`SMTP_SERVER`、`SMTP_PORT`、`SMTP_USERNAME`、`SMTP_PASSWORD`
+4. 推送代码后等待每日任务自动执行
