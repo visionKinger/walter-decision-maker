@@ -14,6 +14,7 @@ from src.reports.report_generator import (
     build_game_theory_matrix,
     build_liquidity_dashboard,
     write_daily_report,
+    generate_deepseek_report,
 )
 from src.stages import (
     stage0_quality_filter,
@@ -94,6 +95,15 @@ def run_pipeline() -> dict:
             f"## Expectation Signal\n{stage3}",
         ]
     )
+
+
+    try:
+        deepseek_section = generate_deepseek_report(summary)
+    except Exception as exc:
+        deepseek_section = f"DeepSeek generation failed: {exc}"
+
+    if deepseek_section:
+        markdown += f"\n\n## DeepSeek AI Summary\n{deepseek_section}"
 
     out = write_daily_report({"markdown": markdown}, settings["paths"]["report_dir"])
 
