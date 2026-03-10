@@ -1,1 +1,3 @@
-# No external dependencies required.
+# Core runtime uses stdlib only.
+# Optional for richer live scraping support:
+# git+https://github.com/D4Vinci/Scrapling.git

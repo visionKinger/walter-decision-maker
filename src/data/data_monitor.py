@@ -6,6 +6,7 @@ from urllib import parse, request
 import csv
 import io
 import json
+from typing import Any
 
 
 @dataclass
@@ -37,10 +38,56 @@ class DataMonitor:
     def __init__(self, timeout_s: int = 12) -> None:
         self.timeout_s = timeout_s
 
+    def _extract_response_text(self, response: Any) -> str:
+        if isinstance(response, str):
+            return response
+
+        for attr in ("text", "content", "body"):
+            value = getattr(response, attr, None)
+            if value is None:
+                continue
+            if callable(value):
+                value = value()
+            if isinstance(value, bytes):
+                return value.decode("utf-8")
+            if isinstance(value, str):
+                return value
+
+        raise ValueError("Could not extract text from HTTP response")
+
+    def _scrapling_get(self, url: str) -> str:
+        try:
+            import scrapling  # type: ignore
+        except ImportError as exc:
+            raise RuntimeError("Scrapling is not installed") from exc
+
+        if hasattr(scrapling, "Fetcher"):
+            fetcher = scrapling.Fetcher()
+            response = fetcher.get(url, timeout=self.timeout_s)
+            return self._extract_response_text(response)
+
+        if hasattr(scrapling, "Scraper"):
+            scraper = scrapling.Scraper()
+            response = scraper.get(url, timeout=self.timeout_s)
+            return self._extract_response_text(response)
+
+        if hasattr(scrapling, "fetch"):
+            response = scrapling.fetch(url, timeout=self.timeout_s)
+            return self._extract_response_text(response)
+
+        raise RuntimeError("Unsupported Scrapling interface")
+
+    def _download_text(self, url: str) -> str:
+        """Prefer Scrapling for resilient live scraping, fallback to urllib."""
+        try:
+            return self._scrapling_get(url)
+        except Exception:
+            with request.urlopen(url, timeout=self.timeout_s) as resp:
+                return resp.read().decode("utf-8")
+
     def _fetch_stooq_change(self, symbol: str) -> float:
         url = f"https://stooq.com/q/l/?s={symbol}&f=sd2t2ohlcv&h&e=csv"
-        with request.urlopen(url, timeout=self.timeout_s) as resp:
-            text = resp.read().decode("utf-8")
+        text = self._download_text(url)
         lines = [x.strip() for x in text.splitlines() if x.strip()]
         if len(lines) < 2:
             raise ValueError(f"No data for {symbol}")
@@ -53,8 +100,7 @@ class DataMonitor:
 
     def _fetch_fred_latest(self, series_id: str) -> float:
         url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
-        with request.urlopen(url, timeout=self.timeout_s) as resp:
-            text = resp.read().decode("utf-8")
+        text = self._download_text(url)
         reader = csv.DictReader(io.StringIO(text))
         rows = [r for r in reader if r.get(series_id) and r[series_id] != "."]
         if not rows:
@@ -63,8 +109,7 @@ class DataMonitor:
 
     def _fetch_fred_prev(self, series_id: str) -> float:
         url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
-        with request.urlopen(url, timeout=self.timeout_s) as resp:
-            text = resp.read().decode("utf-8")
+        text = self._download_text(url)
         reader = csv.DictReader(io.StringIO(text))
         values = [float(r[series_id]) for r in reader if r.get(series_id) and r[series_id] != "."]
         if len(values) < 2:
@@ -75,8 +120,7 @@ class DataMonitor:
         key = api_key or "demo"
         q_symbol = parse.quote(symbol.upper())
         url = f"https://financialmodelingprep.com/api/v3/key-metrics-ttm/{q_symbol}?apikey={parse.quote(key)}"
-        with request.urlopen(url, timeout=self.timeout_s) as resp:
-            payload = json.loads(resp.read().decode("utf-8"))
+        payload = json.loads(self._download_text(url))
 
         if not payload or not isinstance(payload, list):
             raise ValueError(f"No quality metrics returned for {symbol}")

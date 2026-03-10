@@ -48,7 +48,7 @@ walter-decision-maker/
 
 ## 数据引擎（实时抓取）
 
-`src/data/data_monitor.py` 默认会从 Stooq 抓取关键指数（日内开收盘变化），包括：
+`src/data/data_monitor.py` 会优先使用 [Scrapling](https://github.com/D4Vinci/Scrapling) 抓取实时数据（若已安装），并在不可用时自动回退到 `urllib`，保证流水线对依赖变化更稳健。抓取覆盖：
 
 - SPY（美股风险偏好）
 - 2822.HK（沪深300 ETF 代理）
@@ -56,8 +56,14 @@ walter-decision-maker/
 - DXY（美元指数）
 - XAUUSD（黄金）
 - CL（原油）
+- FRED（WALCL/M2SL/BAMLH0A0HYM2）
+- FMP 企业质量指标（ROE、负债结构、FCF 代理）
 
-当网络异常时，会自动回退到本地默认快照，保证流水线不中断。
+可选安装 Scrapling：
+
+```bash
+pip install git+https://github.com/D4Vinci/Scrapling.git
+```
 
 ## DeepSeek 报告生成
 
