@@ -44,3 +44,11 @@ def test_generate_deepseek_report_accepts_legacy_env_key(monkeypatch):
 
     assert report_generator.generate_deepseek_report("ctx") == "ok"
     assert captured["auth"] == "Bearer legacy-key"
+
+
+def test_build_fallback_report_is_plain_text():
+    report = report_generator.build_fallback_report("sample context")
+
+    assert "Executive Summary" in report
+    assert "#" not in report
+    assert "- [x]" not in report

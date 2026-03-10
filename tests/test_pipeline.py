@@ -18,4 +18,4 @@ def test_pipeline_runs_and_generates_report():
         pytest.skip(f"Live data endpoints are unreachable in this environment: {exc}")
 
     assert "Environment=" in result["summary"]
-    assert result["report_path"].endswith(".md")
+    assert "Executive Summary" in result["report_text"]
