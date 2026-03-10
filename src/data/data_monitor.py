@@ -85,17 +85,31 @@ class DataMonitor:
             with request.urlopen(url, timeout=self.timeout_s) as resp:
                 return resp.read().decode("utf-8")
 
+    def _parse_float(self, value: str) -> float | None:
+        cleaned = value.strip().replace(" ", "")
+        if cleaned in {"", "N/D", "NA", "-"}:
+            return None
+
+        try:
+            return float(cleaned)
+        except ValueError:
+            return None
+
     def _fetch_stooq_change(self, symbol: str) -> float:
         url = f"https://stooq.com/q/l/?s={symbol}&f=sd2t2ohlcv&h&e=csv"
         text = self._download_text(url)
         lines = [x.strip() for x in text.splitlines() if x.strip()]
         if len(lines) < 2:
-            raise ValueError(f"No data for {symbol}")
+            return 0.0
         parts = lines[1].split(",")
-        open_px = float(parts[3])
-        close_px = float(parts[6])
-        if open_px <= 0:
-            raise ValueError(f"Invalid open price for {symbol}: {open_px}")
+        if len(parts) < 7:
+            return 0.0
+
+        open_px = self._parse_float(parts[3])
+        close_px = self._parse_float(parts[6])
+        if open_px is None or close_px is None or open_px <= 0:
+            return 0.0
+
         return round((close_px - open_px) / open_px * 100, 2)
 
     def _fetch_fred_latest(self, series_id: str) -> float:
