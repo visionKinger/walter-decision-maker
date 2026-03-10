@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+from datetime import date
 
 import json
 import os
 
-from src.data.data_monitor import DataMonitor
+from src.data.data_monitor import DataMonitor, MarketSnapshot, QualitySnapshot
 from src.data.indicators import expectation_gap_score, liquidity_score, macro_score, trend_score
 from src.models.decision_tree import classify_environment
 from src.models.scoring import weighted_opportunity_score
@@ -38,12 +39,37 @@ def load_settings(path: str = "config/settings.json") -> dict:
 def run_pipeline() -> dict:
     settings = load_settings()
     monitor = DataMonitor()
-    snapshot = monitor.fetch_snapshot()
+
+    try:
+        snapshot = monitor.fetch_snapshot()
+    except Exception:
+        snapshot = MarketSnapshot(
+            as_of=date.today(),
+            spy_change_pct=0.0,
+            csi300_change_pct=0.0,
+            us10y_change_bps=0.0,
+            dxy_change_pct=0.0,
+            gold_change_pct=0.0,
+            oil_change_pct=0.0,
+            fed_balance_trend=0.0,
+            m2_growth=0.0,
+            hy_spread=4.5,
+        )
+
     quality_symbol = settings.get("data", {}).get("quality_symbol", "AAPL")
-    quality_snapshot = monitor.fetch_quality_snapshot(
-        symbol=quality_symbol,
-        api_key=os.getenv("FMP_API_KEY"),
-    )
+    try:
+        quality_snapshot = monitor.fetch_quality_snapshot(
+            symbol=quality_symbol,
+            api_key=os.getenv("FMP_API_KEY"),
+        )
+    except Exception:
+        quality_snapshot = QualitySnapshot(
+            as_of=date.today(),
+            roe=0.16,
+            debt_ratio=0.45,
+            fcf_margin=0.22,
+            symbol=quality_symbol,
+        )
 
     stage0 = stage0_quality_filter.run(
         roe=quality_snapshot.roe,
