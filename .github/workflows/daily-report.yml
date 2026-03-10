@@ -23,31 +23,20 @@ jobs:
       - name: Run pipeline with DeepSeek
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-        run: python -m src.main
+        run: python -m src.main | tee final_report.txt
 
       - name: Upload generated report
         uses: actions/upload-artifact@v4
         with:
           name: daily-report-${{ github.run_id }}
-          path: data/daily_report/*.md
+          path: |
+            final_report.txt
+            data/daily_report/*.md
           if-no-files-found: warn
 
-      - name: Email final report
+      - name: Print final report in workflow logs
         if: ${{ success() }}
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: ${{ secrets.SMTP_SERVER }}
-          server_port: ${{ secrets.SMTP_PORT }}
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          secure: true
-          subject: Daily Decision Report - ${{ github.repository }} - ${{ github.run_number }}
-          to: hhz110@vip.qq.com
-          from: Walter Decision Maker <${{ secrets.SMTP_USERNAME }}>
-          body: |
-            Daily report generated successfully.
-
-            Repository: ${{ github.repository }}
-            Workflow Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            Trigger: ${{ github.event_name }}
-          attachments: data/daily_report/*.md
+        run: |
+          echo "----- REPORT START -----"
+          cat final_report.txt
+          echo "----- REPORT END -----"
