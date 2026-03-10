@@ -41,3 +41,21 @@ def test_extract_response_text_from_content_bytes():
     response = types.SimpleNamespace(content=b"hello")
 
     assert monitor._extract_response_text(response) == "hello"
+
+
+def test_fetch_stooq_change_returns_zero_for_nd_values(monkeypatch):
+    monitor = DataMonitor()
+
+    csv_text = "Symbol,Date,Time,Open,High,Low,Close,Volume\n10USY.B,2026-01-01,22:00:00,N/D,N/D,N/D,4.21,0\n"
+    monkeypatch.setattr(DataMonitor, "_download_text", lambda self, url: csv_text)
+
+    assert monitor._fetch_stooq_change("10usy.b") == 0.0
+
+
+def test_fetch_stooq_change_computes_change_when_prices_exist(monkeypatch):
+    monitor = DataMonitor()
+
+    csv_text = "Symbol,Date,Time,Open,High,Low,Close,Volume\nSPY.US,2026-01-01,22:00:00,100,102,99,101,123\n"
+    monkeypatch.setattr(DataMonitor, "_download_text", lambda self, url: csv_text)
+
+    assert monitor._fetch_stooq_change("spy.us") == 1.0
