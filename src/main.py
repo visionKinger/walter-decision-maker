@@ -18,7 +18,6 @@ from src.reports.report_generator import (
     build_game_theory_matrix,
     build_liquidity_dashboard,
     generate_deepseek_report,
-    write_daily_report,
 )
 from src.stages import (
     stage0_quality_filter,
@@ -132,12 +131,10 @@ def run_pipeline() -> dict:
         markdown = generate_deepseek_report(llm_context)
     except Exception as exc:
         markdown = build_fallback_report(llm_context)
-        markdown += f"\n\n> Note: DeepSeek generation failed: {exc}"
+        markdown += f"\n\nNote: DeepSeek generation failed: {exc}"
 
     if not markdown:
         markdown = build_fallback_report(llm_context)
-
-    out = write_daily_report({"markdown": markdown}, settings["paths"]["report_dir"])
 
     append_decision_log(
         {
@@ -153,10 +150,11 @@ def run_pipeline() -> dict:
         settings["paths"]["decision_log"],
     )
 
-    return {"summary": summary, "report_path": str(out)}
+    return {"summary": summary, "report_text": markdown}
 
 
 if __name__ == "__main__":
     result = run_pipeline()
     print(result["summary"])
-    print(f"Report written to: {result['report_path']}")
+    print("Final report:")
+    print(result["report_text"])

@@ -45,7 +45,8 @@ def generate_deepseek_report(context: str) -> str | None:
                     "role": "system",
                     "content": (
                         "You are THE DECISION-MAKER'S DATA ENGINE. "
-                        "Write a macro intelligence report in markdown with this exact high-level structure: "
+                        "Write a macro intelligence report as pure plain text (no markdown symbols like #, -, *, or checkboxes) "
+                        "with this exact high-level structure: "
                         "1) Title block using lines: THE DECISION-MAKER'S / DATA ENGINE / CHINA MACRO INTELLIGENCE REPORT / "
                         "Applying the Dalio · Druckenmiller · Jiang Framework. "
                         "2) Metadata line with Date, Classification, Region. "
@@ -119,34 +120,33 @@ def build_llm_context(
 def build_fallback_report(context: str) -> str:
     return "\n".join(
         [
-            "# THE DECISION-MAKER'S",
-            "# DATA ENGINE",
-            "# CHINA MACRO INTELLIGENCE REPORT",
-            "### Applying the Dalio · Druckenmiller · Jiang Framework",
+            "THE DECISION-MAKER'S",
+            "DATA ENGINE",
+            "CHINA MACRO INTELLIGENCE REPORT",
+            "Applying the Dalio · Druckenmiller · Jiang Framework",
             "",
-            "## Executive Summary",
+            "Executive Summary",
             "LLM service unavailable. This report preserves the required structure and embeds the latest pipeline context.",
             "",
-            "## Module 1 — The Cycle Report (Dalio Framework)",
+            "Module 1 — The Cycle Report (Dalio Framework)",
             "Refer to context below.",
             "",
-            "## Module 2 — Liquidity & Sentiment Dashboard (Druckenmiller Framework)",
+            "Module 2 — Liquidity & Sentiment Dashboard (Druckenmiller Framework)",
             "Refer to context below.",
             "",
-            "## Module 3 — Game Theory Matrix (Jiang Framework)",
+            "Module 3 — Game Theory Matrix (Jiang Framework)",
             "Refer to context below.",
             "",
-            "## Module 4 — Practical Data Engine Checklist",
-            "- [x] CHECK THE CYCLE",
-            "- [x] CHECK LIQUIDITY",
-            "- [x] CHECK INCENTIVES",
-            "- [x] CHECK THE NEWS",
+            "Module 4 — Practical Data Engine Checklist",
+            "CHECK THE CYCLE: DONE",
+            "CHECK LIQUIDITY: DONE",
+            "CHECK INCENTIVES: DONE",
+            "CHECK THE NEWS: DONE",
             "",
-            "## Unified Framework Verdict",
+            "Unified Framework Verdict",
             "Use the context block to produce a discretionary decision.",
             "",
-            "---",
-            "### Context",
+            "Context",
             context,
         ]
     )
